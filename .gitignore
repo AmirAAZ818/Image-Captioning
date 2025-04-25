@@ -1,2 +1,10 @@
+# idea files
 /.idea
 /.vscode
+
+# python binaries nad cache files
+**/__pycache__/
+*.py[cod]
+
+# dataset files
+/data/flickr8k

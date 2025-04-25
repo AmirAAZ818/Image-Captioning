@@ -5,7 +5,7 @@
 Flickr8k dataset downloader and preprocessor.
 This script downloads the Flickr8k dataset and organizes it for the image captioning task.
 """
-
+import re
 import os
 import zipfile
 import requests
@@ -76,7 +76,7 @@ def process_captions(dataset_path):
     Returns:
         str: Path to the processed captions CSV file
     """
-    captions_path = os.path.join(dataset_path, "Flickr8k_text", "Flickr8k.token.txt")
+    captions_path = os.path.join(dataset_path, "Flickr8k.token.txt")
     
     # TODO: Read the captions file and process it into a structured format
     # 1. Read the captions file line by line
@@ -84,9 +84,21 @@ def process_captions(dataset_path):
     # 3. Remove the #id suffix from image_name
     # 4. Create a list of dictionaries with 'image' and 'caption' keys
     data = []
+    with open(captions_path, 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            image, caption = line.split('#', 1)
+            image = image.strip()
+            caption = caption[1:].strip()
+            data.append({
+                'image': image,
+                'caption': caption
+            })
+            
     
     # Create DataFrame and save to CSV
     df = pd.DataFrame(data)
+    
     
     # Create clean output dir
     output_dir = os.path.join(dataset_path, "processed")
@@ -138,7 +150,7 @@ def create_splits(dataset_path):
         dataset_path (str): Path to the dataset directory
     """
     processed_dir = os.path.join(dataset_path, "processed")
-    flickr_text_dir = os.path.join(dataset_path, "Flickr8k_text")
+    # flickr_text_dir = os.path.join(dataset_path, "Flickr8k_text")
     
     # TODO: Read the split files and create sets of image filenames for each split
     # 1. Read Flickr_8k.trainImages.txt, Flickr_8k.devImages.txt, and Flickr_8k.testImages.txt
@@ -147,15 +159,35 @@ def create_splits(dataset_path):
     val_images = set()
     test_images = set()
     
+    split_names = [("Flickr_8k.trainImages.txt", train_images), ("Flickr_8k.devImages.txt", val_images), ("Flickr_8k.testImages.txt", test_images)]
+    for name, s_set in split_names:
+        split_dir = os.path.join(dataset_path, name)
+        with open(split_dir, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                s_set.add(line[:-1])
+            
+                
+    
     # Load caption data
     captions_df = pd.read_csv(os.path.join(processed_dir, "captions.csv"))
-    
-    train_df = ...
-    val_df = ...
-    test_df = ...
     # TODO: Create DataFrames for each split by filtering the captions_df
     # 1. Filter captions_df to create train_df, val_df, and test_df based on image filename
     # 2. Save each DataFrame to a CSV file in the processed directory
+    
+    train_df = captions_df[captions_df['image'].isin(train_images)]
+    val_df = captions_df[captions_df['image'].isin(val_images)]
+    test_df = captions_df[captions_df['image'].isin(test_images)]
+    
+    train_path = os.path.join(processed_dir, "train.csv")
+    train_df.to_csv(train_path, index=False)
+    
+    val_path = os.path.join(processed_dir, "val.csv")
+    val_df.to_csv(val_path, index=False)
+    
+    test_path = os.path.join(processed_dir, "test.csv")
+    test_df.to_csv(test_path, index=False)
+    
     
     print(f"Created data splits: train ({len(train_df)} captions), val ({len(val_df)} captions), test ({len(test_df)} captions)")
 
