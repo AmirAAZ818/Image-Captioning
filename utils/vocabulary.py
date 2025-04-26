@@ -90,7 +90,7 @@ class Vocabulary:
         
         return tokens
     
-    def build_vocabulary(self, caption_series):
+    def build_vocabulary(self, caption_series: pd.Series):
         """
         Build the vocabulary from a series of captions.
         
@@ -106,6 +106,16 @@ class Vocabulary:
         # 3. Sort words by frequency (most frequent first)
         # 4. Filter words based on frequency threshold and max_size
         # 5. Add each filtered word to the vocabulary (word2idx and idx2word)
+        
+        token_series = caption_series.apply(self.tokenize)
+        all_tokens = [token for tokens in token_series for token in tokens]
+        word_freq = Counter(all_tokens)
+        word_freq = dict(word_freq.most_common(self.max_size))
+        filtered_words = [w for w, cnt in word_freq.items() if cnt >= self.freq_threshold]
+        # there are things left still!
+        
+        
+        
         
         return self
     
