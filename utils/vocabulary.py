@@ -66,7 +66,7 @@ class Vocabulary:
         """Return the size of the vocabulary"""
         return len(self.word2idx)
     
-    def tokenize(self, text):
+    def tokenize(self, text: str):
         """
         Tokenize a caption text into a list of tokens.
         
@@ -112,14 +112,16 @@ class Vocabulary:
         word_freq = Counter(all_tokens)
         word_freq = dict(word_freq.most_common(self.max_size))
         filtered_words = [w for w, cnt in word_freq.items() if cnt >= self.freq_threshold]
-        # there are things left still!
         
-        
-        
+        # Adding to word2index and vice versa
+        for word in filtered_words:
+            self.word2idx[word] = self.idx
+            self.idx2word[self.idx] = word
+            self.idx += 1
         
         return self
     
-    def numericalize(self, text, add_special_tokens=True):
+    def numericalize(self, text: str, add_special_tokens=True):
         """
         Convert a caption text into a list of indices.
         
@@ -137,6 +139,20 @@ class Vocabulary:
         # 3. Add start and end tokens if requested
         # 4. Return the list of indices
         
+        tokens = self.tokenize(text)
+        
+        if add_special_tokens:
+            indices.append(self.word2idx[self.start_token])
+        
+        for token in tokens:
+            if token in self.word2idx:
+                indices.append(self.word2idx[token])
+            else:
+                indices.append(self.word2idx[self.unk_token])
+
+        if add_special_tokens:
+            indices.append(self.word2idx[self.end_token])
+            
         return indices
         
     def decode(self, indices, join=True, remove_special=True):
