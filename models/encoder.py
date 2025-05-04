@@ -37,7 +37,41 @@ class EncoderCNN(nn.Module):
         # 2. Store the feature dimension size (before the final classifier)
         # 3. Remove the classifier/fully-connected layer and replace with nn.Identity()
         # Hint: Look at model architectures to find the classifier attribute name and output feature size
+        if self.model_name == 'resnet50':
+            # Model adaptation
+            model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+            model.fc = nn.Identity()
+            self.model = model
+            
+            # Feature size declaration
+            self.feat_size = 2048
+        elif self.model_name == 'resnet18':
+            # Model adaptation
+            model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+            model.fc = nn.Identity()
+            self.model = model
+            
+            # Feature size declaration
+            self.feat_size = 512
+        elif self.model_name == 'mobilenet_v2':
+            # Model adaptation
+            model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V2)
+            model.classifier = nn.Identity()
+            self.model = model
+            
+            # Feature size declaration
+            self.feat_size = 1280
+        elif self.model == 'inception_v3':
+            # Model adaptation
+            model = models.inception_v3(weights=models.Inception_V3_Weights.IMAGENET1K_V1)
+            model.fc = nn.Identity()
+            self.model = model
+            
+            # Feature size declaration
+            self.feat_size = 2048
         
+        
+            
         # TODO: Create a projection layer to transform CNN features to embed_size
         # The projection should include normalization, activation, and regularization
         
