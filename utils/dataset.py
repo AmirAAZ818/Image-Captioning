@@ -21,7 +21,7 @@ class FlickrDataset(Dataset):
     Loads images and their corresponding captions.
     """
     
-    def __init__(self, images_dir, captions_file, vocab, transform=None, max_length=50):
+    def __init__(self, images_dir, captions_file, vocab: Vocabulary, transform=None, max_length=50):
         """
         Initialize the dataset.
         
@@ -67,8 +67,6 @@ class FlickrDataset(Dataset):
                 image (torch.Tensor): Preprocessed image tensor
                 caption (torch.Tensor): Caption token indices
         """
-        image = ...
-        caption = ...
         # TODO: Implement the data loading logic
         # 1. Get caption text and image filename from DataFrame at the given index
         # 2. Load the image from disk
@@ -78,6 +76,32 @@ class FlickrDataset(Dataset):
         # 6. Convert caption to a tensor
         # 7. Return the processed image and caption
         
+        # 1
+        row = self.df.iloc[idx]
+        image_name = row['image']
+        caption = row['caption']
+        
+        # 2
+        image = Image.open(os.path.join(self.images_dir, image_name)).convert('RGB')
+        
+        # 3
+        image = self.transform(image)
+        
+        # 4
+        token_ids = self.vocab.numericalize(caption)
+        
+        # 5
+        if len(token_ids) > self.max_length:
+            token_ids = token_ids[:self.max_length]
+            token_ids[-1] = self.vocab.word2idx[self.vocab.end_token]
+        elif len(token_ids) < self.max_length:
+            diff = self.max_length - len(token_ids)
+            token_ids = token_ids + [self.vocab.word2idx[self.vocab.pad_token]] * diff
+            
+        # 6
+        caption = torch.tensor(token_ids, dtype=torch.long)
+        
+        # 7
         return image, caption
 
 
@@ -122,9 +146,9 @@ def get_data_loaders(data_dir, batch_size=32, shuffle=True, num_workers=4, pin_m
     """
     # Define paths
     images_dir = os.path.join(data_dir, "processed", "images")
-    train_captions = os.path.join(data_dir, "processed", "train_captions.csv")
-    val_captions = os.path.join(data_dir, "processed", "val_captions.csv")
-    test_captions = os.path.join(data_dir, "processed", "test_captions.csv")
+    train_captions = os.path.join(data_dir, "processed", "train.csv")
+    val_captions = os.path.join(data_dir, "processed", "val.csv")
+    test_captions = os.path.join(data_dir, "processed", "test.csv")
     vocab_path = os.path.join(data_dir, "processed", "vocabulary.pkl")
     
     # Load vocabulary
