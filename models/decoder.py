@@ -37,17 +37,29 @@ class DecoderRNN(nn.Module):
         self.rnn_type = rnn_type.lower()
         
         # TODO: Create the word embedding layer to convert word indices to vectors
+        self.embedding = nn.Embedding(vocab_size, embed_size)
         
         # TODO: Create the RNN layer (LSTM or GRU) based on rnn_type
         # 1. Check the rnn_type ('lstm' or 'gru')
         # 2. Create the appropriate RNN layer with the specified parameters
         # 3. Handle the case of an unsupported RNN type
         
+        if self.rnn_type == 'gru':
+            self.rnn = nn.GRU(embed_size, hidden_size, num_layers, batch_first=True, dropout=dropout)
+        elif self.rnn_type == 'lstm':
+            self.rnn = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True, dropout=dropout)
+        else:
+            raise ValueError(f"Unsupported RNN type: {rnn_type}")
+        
         # TODO: Create the output projection layer from hidden_size to vocab_size
+        self.fc = nn.Linear(hidden_size, vocab_size)
         
         # TODO: Create a dropout layer with the specified dropout probability
+        self.dropout = nn.Dropout(dropout)
         
-    def forward(self, features, captions, hidden=None):
+        
+        
+    def forward(self, features: torch.Tensor, captions: torch.Tensor, hidden=None):
         """
         Forward pass for training with teacher forcing.
         
@@ -61,7 +73,6 @@ class DecoderRNN(nn.Module):
                         Shape: [batch_size, seq_length, vocab_size]
             tuple or torch.Tensor: Final hidden state of the RNN
         """
-        outputs = ...
         # TODO: Implement the forward pass with teacher forcing
         # 1. Embed the input captions
         # 2. Prepare image features (add sequence dimension)
@@ -69,6 +80,7 @@ class DecoderRNN(nn.Module):
         # 4. Run the RNN on the combined inputs
         # 5. Apply dropout to the RNN outputs
         # 6. Project the outputs to vocabulary size
+        outputs = ...        
         
         return outputs, hidden
     
