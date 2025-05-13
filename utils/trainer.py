@@ -16,13 +16,15 @@ import time
 import matplotlib.pyplot as plt
 from utils.metrics import calculate_metrics
 
+from torch.utils.data import DataLoader
+from utils.vocabulary import Vocabulary
 class CaptionTrainer:
     """
     Trainer class for image captioning models.
     Handles training, validation, checkpointing, and logging.
     """
     
-    def __init__(self, model, train_loader, val_loader, vocab, 
+    def __init__(self, model: nn.Module, train_loader: DataLoader, val_loader: DataLoader, vocab: Vocabulary, 
                  device='cuda', learning_rate=3e-4, model_save_dir='models',
                  log_interval=100):
         """
@@ -81,7 +83,7 @@ class CaptionTrainer:
         self.best_bleu = 0.0
         self.epochs_without_improvement = 0
     
-    def train_epoch(self):
+    def train_epoch(self) -> float:
         """
         Train the model for one epoch.
         
@@ -95,14 +97,41 @@ class CaptionTrainer:
         
         # TODO: Implement the training loop for one epoch
         # 1. Iterate through batches in the training data loader
+        for idx, (images, captions, image_id) in progress_bar:
         # 2. Move data (images and captions) to the device
+            images = images.to(self.device)
+            captions = captions.to(self.device)
+            
         # 3. Zero gradients
+            self.optimizer.zero_grad()
+            
         # 4. Forward pass through the model
+            outputs, _ = self.model(images, captions) # [Batch size, number of tokens - 1, vocabulary size]
+            
         # 5. Calculate loss (reshape outputs and targets as needed)
+            targets = captions[:, 1:].reshape(-1) # we remove START token [B * (T-1)]
+            outputs = outputs.reshape(-1, outputs.size(2)) # result shape: [B * (T-1), V]
+            
+            loss = self.criterion(outputs, targets)
+            
         # 6. Backward pass and optimize
-        # 7. Apply gradient clipping to prevent exploding gradients
+            loss.backward()
+            
+        # 7. Apply gradient clipping to prevent exploding gradients 
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
+            
+        # Optimizer step 
+            self.optimizer.step()    
+        
         # 8. Update metrics and progress bar
+            batch_loss = loss.item()
+            epoch_loss += batch_loss
+            batch_losses.append(batch_loss)
+        
         # 9. Log at specified intervals
+            if (idx + 1) % self.log_interval == 0:
+                progress_bar.set_postfix(loss=batch_loss)
+                
         
         # Calculate average epoch loss
         avg_loss = epoch_loss / len(self.train_loader)
@@ -128,11 +157,23 @@ class CaptionTrainer:
         
         # TODO: Implement validation loop
         # 1. Iterate through validation data loader with torch.no_grad()
-        # 2. Move data to device
-        # 3. Forward pass
-        # 4. Calculate and accumulate validation loss
-        # 5. If generate_captions is True, calculate BLEU score
-        
+        with torch.no_grad():
+            for images, captions, images_id in tqdm(self.val_loader, desc='Validating'):
+            # 2. Move data to device
+                images = images.to(self.device)
+                captions = captions.to(self.device)
+            # 3. Forward pass
+                outputs, _ = self.model(images, captions) # [B, T - 1, Vocab]
+            # 4. Calculate and accumulate validation loss
+                targets = captions[:, 1:].reshape(-1)
+                outputs = outputs.reshape(-1, outputs.size(2))
+                
+                loss = self.criterion(outputs, targets)
+                val_loss += loss.item()
+            # 5. If generate_captions is True, calculate BLEU score
+                if generate_captions:
+                    bleu_score = self.calculate_metrics()
+            
         # Calculate average validation loss
         avg_val_loss = val_loss / len(self.val_loader)
         tqdm.write(f"Epoch {self.current_epoch+1} - Val Loss: {avg_val_loss:.4f}" + 
@@ -140,7 +181,7 @@ class CaptionTrainer:
         
         return avg_val_loss, bleu_score
     
-    def calculate_metrics(self, num_samples=None):
+    def calculate_metrics(self, num_samples=None) -> float:
         """
         Calculate BLEU score on validation or test set.
         
