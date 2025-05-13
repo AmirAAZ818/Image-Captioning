@@ -97,7 +97,7 @@ class CaptionTrainer:
         
         # TODO: Implement the training loop for one epoch
         # 1. Iterate through batches in the training data loader
-        for idx, (images, captions, image_id) in progress_bar:
+        for idx, (images, captions) in progress_bar:
         # 2. Move data (images and captions) to the device
             images = images.to(self.device)
             captions = captions.to(self.device)
@@ -158,7 +158,7 @@ class CaptionTrainer:
         # TODO: Implement validation loop
         # 1. Iterate through validation data loader with torch.no_grad()
         with torch.no_grad():
-            for images, captions, images_id in tqdm(self.val_loader, desc='Validating'):
+            for images, captions in tqdm(self.val_loader, desc='Validating'):
             # 2. Move data to device
                 images = images.to(self.device)
                 captions = captions.to(self.device)
