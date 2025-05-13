@@ -13,6 +13,10 @@ from collections import defaultdict
 import nltk
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
+from models.caption_model import CaptionModel
+from utils.vocabulary import Vocabulary
+from torch.utils.data import DataLoader
+
 # Make sure NLTK tokenizer is available
 try:
     nltk.data.find('tokenizers/punkt')
@@ -31,16 +35,29 @@ def calculate_bleu(references, hypotheses, max_n=4):
     Returns:
         list: BLEU scores for different n-grams (BLEU-1, BLEU-2, etc.)
     """
-    bleu_scores = ...
     # TODO: Implement BLEU score calculation
     # 1. Tokenize references and hypotheses if they're not already tokenized
+    if isinstance(references[0][0], str):
+        references = [[ref.split() for ref in refs] for refs in references]
+    if isinstance(hypotheses[0], str):
+        hypotheses = [txt.split() for txt in hypotheses]
     # 2. Set up smoothing function to handle zero counts
+    smoother = SmoothingFunction().method1
     # 3. Calculate BLEU scores for different n-grams (BLEU-1 to BLEU-n)
+    weight_list = [
+        tuple((1. / n if i < n else 0.) for i in range(4))
+        for n in range(1, max_n + 1)
+    ]
+    
+    bleu_scores = [
+        corpus_bleu(references, hypotheses, weights=weights, smoothing_function=smoother)
+        for weights in weight_list
+    ]
     # 4. Return list of BLEU scores
     
     return bleu_scores
 
-def calculate_metrics(model, dataloader, vocab, device='cuda', max_samples=None, beam_size=1):
+def calculate_metrics(model: CaptionModel, dataloader: DataLoader, vocab: Vocabulary, device='cuda', max_samples=None, beam_size=1):
     """
     Calculate evaluation metrics for the captioning model.
     
@@ -89,8 +106,8 @@ def calculate_metrics(model, dataloader, vocab, device='cuda', max_samples=None,
             hypotheses_by_id[image_id] = predicted_caption
     
     # Prepare data for BLEU calculation
-    references = [references_by_id[image_id] for image_id in hypotheses_by_id.keys()]
-    hypotheses = [hypotheses_by_id[image_id] for image_id in hypotheses_by_id.keys()]
+    references = [references_by_id[image_id] for image_id in hypotheses_by_id.keys()] # List[List[caption]] or List[List[List[tokens]]]
+    hypotheses = [hypotheses_by_id[image_id] for image_id in hypotheses_by_id.keys()] # str or List[tokens]
     
     # Calculate BLEU score
     bleu_scores = calculate_bleu(references, hypotheses)
