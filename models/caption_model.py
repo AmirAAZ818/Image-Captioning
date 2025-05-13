@@ -47,6 +47,7 @@ class CaptionModel(nn.Module):
             embed_size=embed_size,
             trainable=train_encoder,
         )
+        
         # 2. Create a DecoderRNN instance with the specified parameters
         self.decoder = DecoderRNN(
             embed_size=embed_size,
@@ -57,12 +58,14 @@ class CaptionModel(nn.Module):
             dropout=dropout
         )
         
+        self.init_h = nn.Linear(embed_size, hidden_size)
+        
     def forward(self, images, captions, hidden=None):
         """
         Forward pass for training with teacher forcing.
         
         Args:
-            images (torch.Tensor): Input images [batch_size, 3,ght, width hei]
+            images (torch.Tensor): Input images [batch_size, 3,hight, width]
             captions (torch.Tensor): Ground truth captions [batch_size, seq_length]
             hidden (tuple or torch.Tensor, optional): Initial hidden state for the RNN
             
@@ -71,12 +74,14 @@ class CaptionModel(nn.Module):
                         Shape: [batch_size, seq_length, vocab_size]
             tuple or torch.Tensor: Final hidden state of the RNN
         """
-        outputs = ...
         # TODO: Implement the forward pass of the full model
         # 1. Extract features from images using the encoder
+        features = self.encoder(images)
         # 2. Use the decoder to generate captions based on the features and ground truth captions
-        # 3. Return the outputs and final hidden state
+        hidden = self.init_h(features) # is this correct? 
+        outputs, hidden = self.decoder(features, captions, hidden)
         
+        # 3. Return the outputs and final hidden state
         return outputs, hidden
     
     def generate_caption(self, image, max_length=20, start_token=1, end_token=2, beam_size=1):
