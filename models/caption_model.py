@@ -42,14 +42,27 @@ class CaptionModel(nn.Module):
         
         # TODO: Initialize the encoder and decoder components
         # 1. Create an EncoderCNN instance with the specified parameters
+        self.encoder = EncoderCNN(
+            model_name=encoder_model,
+            embed_size=embed_size,
+            trainable=train_encoder,
+        )
         # 2. Create a DecoderRNN instance with the specified parameters
+        self.decoder = DecoderRNN(
+            embed_size=embed_size,
+            hidden_size=hidden_size,
+            vocab_size=vocab_size,
+            num_layers=num_layers,
+            rnn_type=decoder_type,
+            dropout=dropout
+        )
         
     def forward(self, images, captions, hidden=None):
         """
         Forward pass for training with teacher forcing.
         
         Args:
-            images (torch.Tensor): Input images [batch_size, 3, height, width]
+            images (torch.Tensor): Input images [batch_size, 3,ght, width hei]
             captions (torch.Tensor): Ground truth captions [batch_size, seq_length]
             hidden (tuple or torch.Tensor, optional): Initial hidden state for the RNN
             

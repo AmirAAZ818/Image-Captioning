@@ -8,3 +8,6 @@
 
 # dataset files
 /data/flickr8k
+
+# test file
+/notebooks/test.ipynb

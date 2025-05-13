@@ -80,7 +80,26 @@ class DecoderRNN(nn.Module):
         # 4. Run the RNN on the combined inputs
         # 5. Apply dropout to the RNN outputs
         # 6. Project the outputs to vocabulary size
-        outputs = ...        
+        
+        # 1
+        embeddings = self.embedding(captions[:, :-1])
+        
+        # 2
+        h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)  # [num_layers, B, H]
+        if self.rnn_type == 'lstm':
+            c0 = torch.zeros_like(h0)
+            hidden = (h0, c0)
+        else:
+            hidden = h0
+            
+        # 4
+        outputs, hidden = self.rnn(embeddings, hidden)
+        
+        # 5
+        outputs = self.dropout(outputs)
+        
+        # 6
+        outputs = self.fc(outputs)
         
         return outputs, hidden
     
@@ -115,20 +134,45 @@ class DecoderRNN(nn.Module):
         batch_size = features.size(0)
         device = features.device
         
-        sampled_ids = ...
+        inputs = torch.full((batch_size, 1), start_token, dtype=torch.long, device=device)
+        
         # TODO: Implement greedy sampling for caption generation
         # 1. Initialize inputs with start token
+        curr = start_token
+        
         # 2. Initialize hidden state (may need to handle LSTM and GRU differently)
+        hidden = None
+        h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)
+        if self.rnn_type == 'lstm':
+            c0 = torch.zeros_like(h0)
+            hidden = (h0, c0)
+        else:
+            hidden = h0
+        
         # 3. Create a list to store sampled token indices
+        sampled_ids = []
+        
         # 4. Loop for max_length steps:
+        for _ in range(max_length):
         #    a. Embed the current input
+            embeddings = self.embedding(inputs)
         #    b. Run a single step of the RNN
+            outputs, hidden = self.rnn(embeddings, hidden) # shape: [batch_size, 1, hidden_size]
         #    c. Project to vocabulary size and apply temperature
+            logits = self.fc(outputs.squeeze(1)) # shape: [batch_size, vocab_size]
+            logits = logits / temperature
         #    d. Select the most likely next word
+            predicted = torch.argmax(logits, 1, keepdim=True) # shape: [Batch_size, 1]
         #    e. Append to sampled indices
+            sampled_ids.append(predicted)
         #    f. Update input for next step
+            inputs = predicted
         #    g. Break if all sequences generated end token
+            if (predicted == end_token).all():
+                break
+            
         # 5. Stack sampled indices into a tensor
+        sampled_ids = torch.cat(sampled_ids, dim=1) 
         
         return sampled_ids
     
