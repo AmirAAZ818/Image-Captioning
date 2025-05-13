@@ -62,7 +62,7 @@ class CaptionTrainer:
         
         # Define learning rate scheduler
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode='min', factor=0.5, patience=3, verbose=True
+            self.optimizer, mode='min', factor=0.5, patience=3
         )
         
         # Create model save directory
