@@ -85,9 +85,7 @@ class DecoderRNN(nn.Module):
         embeddings = self.embedding(captions[:, :-1])
         
         # 2
-        h0 = hidden
-        if hidden == None:
-            h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)  # [num_layers, B, H]
+        h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)  # [num_layers, B, H]
         if self.rnn_type == 'lstm':
             c0 = torch.zeros_like(h0)
             hidden = (h0, c0)

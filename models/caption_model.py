@@ -58,8 +58,6 @@ class CaptionModel(nn.Module):
             dropout=dropout
         )
         
-        self.init_h = nn.Linear(embed_size, hidden_size)
-        
     def forward(self, images, captions, hidden=None):
         """
         Forward pass for training with teacher forcing.
@@ -78,13 +76,12 @@ class CaptionModel(nn.Module):
         # 1. Extract features from images using the encoder
         features = self.encoder(images)
         # 2. Use the decoder to generate captions based on the features and ground truth captions
-        hidden = self.init_h(features) # is this correct? 
         outputs, hidden = self.decoder(features, captions, hidden)
         
         # 3. Return the outputs and final hidden state
         return outputs, hidden
     
-    def generate_caption(self, image, max_length=20, start_token=1, end_token=2, beam_size=1):
+    def generate_caption(self, image: torch.Tensor, max_length=20, start_token=1, end_token=2, beam_size=1) -> torch.Tensor:
         """
         Generate a caption for a single image.
         
@@ -101,7 +98,15 @@ class CaptionModel(nn.Module):
         sampled_ids = list()
         # TODO: Implement caption generation for inference
         # 1. Extract features from the image using the encoder (with torch.no_grad())
+        with torch.no_grad():
+            features = self.encoder(image)
         # 2. Use the decoder to generate a caption based on the features
+            sampled_ids = self.decoder.sample(
+                features=features,
+                max_length=max_length,
+                start_token=start_token,
+                end_token=end_token,
+                beam_size=beam_size,
+            )
         # 3. Return the generated caption
-        
         return sampled_ids[0]  # Return first (and only) sequence in the batch
