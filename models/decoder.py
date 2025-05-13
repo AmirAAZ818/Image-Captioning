@@ -57,6 +57,9 @@ class DecoderRNN(nn.Module):
         # TODO: Create a dropout layer with the specified dropout probability
         self.dropout = nn.Dropout(dropout)
         
+        # Linear layer for feat -> hidden
+        self.feat2hidden = nn.Linear(embed_size, hidden_size)
+        
         
         
     def forward(self, features: torch.Tensor, captions: torch.Tensor, hidden=None):
@@ -85,7 +88,7 @@ class DecoderRNN(nn.Module):
         embeddings = self.embedding(captions[:, :-1])
         
         # 2
-        h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)  # [num_layers, B, H]
+        h0 = self.feat2hidden(features).unsqueeze(0).repeat(self.num_layers, 1, 1)  # [num_layers, B, H]
         if self.rnn_type == 'lstm':
             c0 = torch.zeros_like(h0)
             hidden = (h0, c0)
