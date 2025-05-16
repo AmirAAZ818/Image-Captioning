@@ -145,7 +145,7 @@ class DecoderRNN(nn.Module):
         
         # 2. Initialize hidden state (may need to handle LSTM and GRU differently)
         hidden = None
-        h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)
+        h0 = self.feat2hidden(features).unsqueeze(0).repeat(self.num_layers, 1, 1)
         if self.rnn_type == 'lstm':
             c0 = torch.zeros_like(h0)
             hidden = (h0, c0)
@@ -198,7 +198,7 @@ class DecoderRNN(nn.Module):
         # For the first step, use image features as initial hidden state
         if self.rnn_type == 'lstm':
             # For LSTM, we need to initialize (h0, c0)
-            h0 = features.unsqueeze(0).repeat(self.num_layers, 1, 1)
+            h0 = self.feat2hidden(features).unsqueeze(0).repeat(self.num_layers, 1, 1)
             c0 = torch.zeros_like(h0)
             hidden_init = (h0, c0)
         else:

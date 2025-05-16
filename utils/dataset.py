@@ -177,8 +177,8 @@ def get_data_loaders(data_dir, batch_size=32, shuffle=True, num_workers=4, pin_m
     ])
     
     # Create datasets
-    train_dataset = FlickrDataset(images_dir, train_captions, vocab, transform=train_transform)
-    val_dataset = FlickrDataset(images_dir, val_captions, vocab, transform=val_transform)
+    train_dataset = FlickrDatasetWithID(images_dir, train_captions, vocab, transform=train_transform)
+    val_dataset = FlickrDatasetWithID(images_dir, val_captions, vocab, transform=val_transform)
     test_dataset = FlickrDatasetWithID(images_dir, test_captions, vocab, transform=val_transform)
     
     # Create data loaders

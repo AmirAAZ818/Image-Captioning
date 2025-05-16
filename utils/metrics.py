@@ -8,7 +8,7 @@ This module implements metrics for evaluating caption quality.
 
 import torch
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from collections import defaultdict
 import nltk
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
@@ -80,7 +80,7 @@ def calculate_metrics(model: CaptionModel, dataloader: DataLoader, vocab: Vocabu
     
     # Generate captions
     with torch.no_grad():
-        for i, (image, caption, image_id) in enumerate(tqdm(dataloader, desc="Generating captions")):
+        for i, (image, caption, image_id) in enumerate(tqdm(dataloader, desc="Generating captions", leave=True)):
             # Process only max_samples if specified
             if max_samples is not None and i >= max_samples:
                 break

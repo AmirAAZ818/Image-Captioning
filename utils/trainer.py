@@ -10,7 +10,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import numpy as np
 import time
 import matplotlib.pyplot as plt
@@ -97,7 +97,7 @@ class CaptionTrainer:
         
         # TODO: Implement the training loop for one epoch
         # 1. Iterate through batches in the training data loader
-        for idx, (images, captions) in progress_bar:
+        for idx, (images, captions, _) in progress_bar:
         # 2. Move data (images and captions) to the device
             images = images.to(self.device)
             captions = captions.to(self.device)
@@ -157,8 +157,9 @@ class CaptionTrainer:
         
         # TODO: Implement validation loop
         # 1. Iterate through validation data loader with torch.no_grad()
+        progress_bar = tqdm(self.val_loader, total=len(self.val_loader), desc=f"Validating")
         with torch.no_grad():
-            for images, captions in tqdm(self.val_loader, desc='Validating'):
+            for images, captions, _ in progress_bar:
             # 2. Move data to device
                 images = images.to(self.device)
                 captions = captions.to(self.device)
@@ -333,7 +334,7 @@ class CaptionTrainer:
             print(f"Checkpoint not found at {checkpoint_path}")
             return self
         
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         
         # Load model state
         self.model.load_state_dict(checkpoint['model_state_dict'])

@@ -81,7 +81,7 @@ class CaptionModel(nn.Module):
         # 3. Return the outputs and final hidden state
         return outputs, hidden
     
-    def generate_caption(self, image: torch.Tensor, max_length=20, start_token=1, end_token=2, beam_size=1) -> torch.Tensor:
+    def generate_caption(self, image: torch.Tensor, max_length=20, start_token=1, end_token=2, beam_size=1, temperature=1.) -> torch.Tensor:
         """
         Generate a caption for a single image.
         
@@ -107,6 +107,7 @@ class CaptionModel(nn.Module):
                 start_token=start_token,
                 end_token=end_token,
                 beam_size=beam_size,
+                temperature=temperature
             )
         # 3. Return the generated caption
         return sampled_ids[0]  # Return first (and only) sequence in the batch
